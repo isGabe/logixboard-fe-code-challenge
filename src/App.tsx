@@ -44,7 +44,7 @@ export const App = () => {
             <Redirect to="/dashboard" />
           </Route>
           <Route path="/dashboard">
-            <DashboardPage />
+            <DashboardPage data={fetchShipmentsResult} />
           </Route>
           <Route path="/shipments">
             <ShipmentsPage navBarHeight={navBarHeight} data={fetchShipmentsResult} />
