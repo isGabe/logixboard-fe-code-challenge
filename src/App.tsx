@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { createTheme, ThemeProvider } from '@material-ui/core';
 import { BrowserRouter as Router, Redirect, Route, Switch } from 'react-router-dom'
+import { fetchShipments, FetchShipmentsResult, LoadingResult } from "./data/fetch-shipments"
 import { Navbar } from './components/Navbar';
 import { DashboardPage } from './pages/DashboardPage';
 import { ShipmentsPage } from './pages/ShipmentsPage';
@@ -14,7 +15,15 @@ const theme = createTheme({
   }
 })
 
+const INITIAL_RESULT: LoadingResult = {
+  status: 'LOADING'
+}
+
 export const App = () => {
+  const [fetchShipmentsResult, setFetchShipmentsResult] = useState<FetchShipmentsResult | LoadingResult>(INITIAL_RESULT)
+    useEffect(() => {
+        fetchShipments().then(result => setFetchShipmentsResult(result))
+    }, [])
   const navBarRef = useRef<HTMLDivElement>(null);
   const [navBarHeight, setNavBarHeight] = useState<number | null>(null);
 
@@ -38,7 +47,7 @@ export const App = () => {
             <DashboardPage />
           </Route>
           <Route path="/shipments">
-            <ShipmentsPage navBarHeight={navBarHeight} />
+            <ShipmentsPage navBarHeight={navBarHeight} data={fetchShipmentsResult} />
           </Route>
         </Switch>
       </Router>

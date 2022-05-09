@@ -2,6 +2,10 @@ import { format } from 'date-fns'
 import { Shipment } from "./Shipment"
 import { SHIPMENTS_DATA } from './shipments-data'
 
+export type LoadingResult = {
+  status: 'LOADING'
+}
+
 type ErrorResult = {
     status: 'ERROR'
     message: string
