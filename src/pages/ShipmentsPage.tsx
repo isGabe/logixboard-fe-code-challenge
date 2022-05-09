@@ -66,7 +66,11 @@ const INITIAL_RESULT: LoadingResult = {
     status: 'LOADING'
 }
 
-export const ShipmentsPage: React.FC = () => {
+type ShipmentsPageProps = {
+  navBarHeight?: number | null
+}
+
+export const ShipmentsPage: React.FC<ShipmentsPageProps> = ({ navBarHeight }) => {
     const classes = useStyles()
     const theme = useTheme()
 
@@ -78,13 +82,18 @@ export const ShipmentsPage: React.FC = () => {
     let component: ReactElement
     switch (fetchShipmentsResult.status) {
         case 'SUCCESS':
-            component = <DataGrid
-                className={classes.grid}
-                rows={fetchShipmentsResult.shipments}
-                columns={COLUMNS}
-                disableSelectionOnClick
-                autoPageSize
-            />
+            component =
+            <div style={{ display: 'flex', height: `calc(100% - ${navBarHeight}px)` }}>
+              <div style={{ flexGrow: 1, paddingBottom: '1rem' }}>
+                <DataGrid
+                  className={classes.grid}
+                  rows={fetchShipmentsResult.shipments}
+                  columns={COLUMNS}
+                  disableSelectionOnClick
+                  autoPageSize
+              />
+              </div>
+            </div>
             break;
         case 'LOADING':
             component = <Box className={classes.loader}>
@@ -97,4 +106,5 @@ export const ShipmentsPage: React.FC = () => {
     }
 
     return component
+
 }

@@ -1,11 +1,10 @@
+import { useRef, useState, useEffect } from 'react';
 import { createTheme, ThemeProvider } from '@material-ui/core';
 import { BrowserRouter as Router, Redirect, Route, Switch } from 'react-router-dom'
-
-import './App.css';
 import { Navbar } from './components/Navbar';
 import { DashboardPage } from './pages/DashboardPage';
 import { ShipmentsPage } from './pages/ShipmentsPage';
-
+import './App.css';
 
 const theme = createTheme({
   palette: {
@@ -16,10 +15,21 @@ const theme = createTheme({
 })
 
 export const App = () => {
+  const navBarRef = useRef<HTMLDivElement>(null);
+  const [navBarHeight, setNavBarHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (navBarRef.current) {
+      setNavBarHeight(navBarRef.current.clientHeight);
+    }
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <Router>
-        <Navbar />
+        <div ref={navBarRef}>
+          <Navbar />
+        </div>
         <Switch>
           <Route exact path="/">
             <Redirect to="/dashboard" />
@@ -28,7 +38,7 @@ export const App = () => {
             <DashboardPage />
           </Route>
           <Route path="/shipments">
-            <ShipmentsPage />
+            <ShipmentsPage navBarHeight={navBarHeight} />
           </Route>
         </Switch>
       </Router>
