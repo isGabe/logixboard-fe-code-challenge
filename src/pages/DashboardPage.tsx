@@ -145,8 +145,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ data }) => {
 
     return shipmentsByDay;
   };
-  // @ts-ignore
-  console.log(data.shipments, sortedData);
+
   let component: ReactElement;
   switch (data.status) {
     case 'SUCCESS':
