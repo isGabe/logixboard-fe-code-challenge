@@ -1,31 +1,31 @@
-import { useRef, useState, useEffect } from "react";
-import { createTheme, ThemeProvider } from "@material-ui/core";
+import { useRef, useState, useEffect } from 'react';
+import { createTheme, ThemeProvider } from '@material-ui/core';
 import {
   BrowserRouter as Router,
   Redirect,
   Route,
   Switch,
-} from "react-router-dom";
+} from 'react-router-dom';
 import {
   fetchShipments,
   FetchShipmentsResult,
   LoadingResult,
-} from "./data/fetch-shipments";
-import { Navbar } from "./components/Navbar";
-import { DashboardPage } from "./pages/DashboardPage";
-import { ShipmentsPage } from "./pages/ShipmentsPage";
-import "./App.css";
+} from './data/fetch-shipments';
+import { Navbar } from './components/Navbar';
+import { DashboardPage } from './pages/DashboardPage';
+import { ShipmentsPage } from './pages/ShipmentsPage';
+import './App.css';
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#2AC3AD",
+      main: '#2AC3AD',
     },
   },
 });
 
 const INITIAL_RESULT: LoadingResult = {
-  status: "LOADING",
+  status: 'LOADING',
 };
 
 export const App = () => {
