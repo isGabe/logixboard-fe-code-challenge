@@ -1,5 +1,11 @@
-import { ReactElement } from 'react';
-import { Container, Box, makeStyles, useTheme } from '@material-ui/core';
+import { ReactElement, useState } from 'react';
+import {
+  Box,
+  Button,
+  Container,
+  makeStyles,
+  useTheme,
+} from '@material-ui/core';
 import { DataGrid, GridColDef } from '@material-ui/data-grid';
 import Loader from 'react-loader-spinner';
 import { differenceInWeeks, eachDayOfInterval, add, format } from 'date-fns';
@@ -49,6 +55,14 @@ const COLUMNS: GridColDef[] = [
 ];
 
 const useStyles = makeStyles({
+  button: {
+    '&:hover': {
+      backgroundColor: '#63DCCB',
+    },
+  },
+  container: {
+    paddingBottom: '2rem',
+  },
   weekday: {
     marginBottom: '2rem',
   },
@@ -73,6 +87,7 @@ const useStyles = makeStyles({
 export const DashboardPage: React.FC<DashboardPageProps> = ({ data }) => {
   const classes = useStyles();
   const theme = useTheme();
+  const [weeksToShow, setWeeksToShow] = useState(1);
 
   const now = new Date();
   // Sort shipments by arrival date
@@ -84,53 +99,62 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ data }) => {
         const bDate = new Date(b.estimatedArrival);
         return aDate.getTime() - bDate.getTime();
       })
+      // Return only shipments arriving in the future
       .filter((shipment: Shipment) => {
         const date = new Date(shipment.estimatedArrival);
         return date.getTime() > now.getTime();
       });
 
-  // Get shipments for the next 7 days
-  const thisWeeksShipments =
-    sortedData &&
-    sortedData.reduce((accumulator, shipment: Shipment) => {
-      const date = new Date(shipment.estimatedArrival);
-
-      const weekDifference = differenceInWeeks(date, now);
-      if (weekDifference === 0) {
-        accumulator.push(shipment);
-      }
-
-      return accumulator;
-    }, [] as Shipment[]);
-
-  // Get an array of the next 7 days
-  const weekDays = eachDayOfInterval({
-    start: now,
-    end: add(now, { days: 7 }),
-  });
-
   // Group shipments by day
-  const thisWeeksShipmentsByDay = weekDays.map((day: Date) => {
-    const dayShipments =
-      thisWeeksShipments &&
-      thisWeeksShipments.filter((shipment: Shipment) => {
-        return new Date(shipment.estimatedArrival).getTime() === day.getTime();
-      });
+  const thisWeeksShipmentsByDay = (weeks: number) => {
+    // Get an array of days for the next `weeks` weeks
+    const weekDays = eachDayOfInterval({
+      start: now,
+      end: add(now, { days: weeks * 7 }),
+    });
 
-    return {
-      day: format(day, 'EEEE MMM d, yyyy'),
-      shipments: dayShipments,
-    };
-  });
+    // Get shipments for the next `weeks` weeks
+    const shipments =
+      sortedData &&
+      sortedData.reduce((accumulator, shipment: Shipment) => {
+        const date = new Date(shipment.estimatedArrival);
 
+        const weekDifference = differenceInWeeks(date, now);
+        if (weekDifference <= weeks - 1) {
+          accumulator.push(shipment);
+        }
+
+        return accumulator;
+      }, [] as Shipment[]);
+
+    // Group shipments by day
+    const shipmentsByDay = weekDays.map((day: Date) => {
+      const dayShipments =
+        shipments &&
+        shipments.filter((shipment: Shipment) => {
+          return (
+            new Date(shipment.estimatedArrival).getTime() === day.getTime()
+          );
+        });
+
+      return {
+        day: format(day, 'EEEE MMMM d, yyyy'),
+        shipments: dayShipments,
+      };
+    });
+
+    return shipmentsByDay;
+  };
+  // @ts-ignore
+  console.log(data.shipments, sortedData);
   let component: ReactElement;
   switch (data.status) {
     case 'SUCCESS':
       component = (
-        <Container>
-          <h1>Shipments for the next 7 days</h1>
+        <Container className={classes.container}>
+          <h1>Shipments for the next {weeksToShow * 7} days</h1>
           {thisWeeksShipmentsByDay &&
-            thisWeeksShipmentsByDay.map(
+            thisWeeksShipmentsByDay(weeksToShow).map(
               (day: { day: string; shipments: false | Shipment[] }) => {
                 return (
                   <Box key={day.day} className={classes.weekday}>
@@ -159,6 +183,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ data }) => {
                 );
               }
             )}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setWeeksToShow(weeksToShow + 1)}
+          >
+            Show more shipments
+          </Button>
         </Container>
       );
       break;
