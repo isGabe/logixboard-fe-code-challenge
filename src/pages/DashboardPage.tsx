@@ -56,6 +56,7 @@ const COLUMNS: GridColDef[] = [
 
 const useStyles = makeStyles({
   button: {
+    marginRight: '2rem',
     '&:hover': {
       backgroundColor: '#63DCCB',
     },
@@ -87,30 +88,24 @@ const useStyles = makeStyles({
 export const DashboardPage: React.FC<DashboardPageProps> = ({ data }) => {
   const classes = useStyles();
   const theme = useTheme();
-  const [weeksToShow, setWeeksToShow] = useState(1);
-
   const now = new Date();
+  const [startDate, setStartDate] = useState(now);
+
   // Sort shipments by arrival date
   const sortedData =
     data.status === 'SUCCESS' &&
-    [...data.shipments]
-      .sort((a: Shipment, b: Shipment) => {
-        const aDate = new Date(a.estimatedArrival);
-        const bDate = new Date(b.estimatedArrival);
-        return aDate.getTime() - bDate.getTime();
-      })
-      // Return only shipments arriving in the future
-      .filter((shipment: Shipment) => {
-        const date = new Date(shipment.estimatedArrival);
-        return date.getTime() > now.getTime();
-      });
+    [...data.shipments].sort((a: Shipment, b: Shipment) => {
+      const aDate = new Date(a.estimatedArrival);
+      const bDate = new Date(b.estimatedArrival);
+      return aDate.getTime() - bDate.getTime();
+    });
 
   // Group shipments by day
-  const thisWeeksShipmentsByDay = (weeks: number) => {
+  const thisWeeksShipmentsByDay = () => {
     // Get an array of days for the next `weeks` weeks
     const weekDays = eachDayOfInterval({
-      start: now,
-      end: add(now, { days: weeks * 7 }),
+      start: startDate,
+      end: add(startDate, { days: 6 }),
     });
 
     // Get shipments for the next `weeks` weeks
@@ -119,8 +114,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ data }) => {
       sortedData.reduce((accumulator, shipment: Shipment) => {
         const date = new Date(shipment.estimatedArrival);
 
-        const weekDifference = differenceInWeeks(date, now);
-        if (weekDifference <= weeks - 1) {
+        const weekDifference = differenceInWeeks(date, startDate);
+        if (weekDifference === 0) {
           accumulator.push(shipment);
         }
 
@@ -151,9 +146,28 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ data }) => {
     case 'SUCCESS':
       component = (
         <Container className={classes.container}>
-          <h1>Shipments for the next {weeksToShow * 7} days</h1>
+          <h1>
+            Shipments for week of {format(startDate, 'EEEE MMMM d, yyyy')}
+          </h1>
+          <Button
+            className={classes.button}
+            variant="contained"
+            color="primary"
+            onClick={() => setStartDate(add(startDate, { days: -7 }))}
+          >
+            Show previous week's shipments
+          </Button>
+          <Button
+            className={classes.button}
+            variant="contained"
+            color="primary"
+            onClick={() => setStartDate(add(startDate, { days: 7 }))}
+          >
+            Show next week's shipments
+          </Button>
+
           {thisWeeksShipmentsByDay &&
-            thisWeeksShipmentsByDay(weeksToShow).map(
+            thisWeeksShipmentsByDay().map(
               (day: { day: string; shipments: false | Shipment[] }) => {
                 return (
                   <Box key={day.day} className={classes.weekday}>
@@ -182,13 +196,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ data }) => {
                 );
               }
             )}
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => setWeeksToShow(weeksToShow + 1)}
-          >
-            Show more shipments
-          </Button>
         </Container>
       );
       break;
