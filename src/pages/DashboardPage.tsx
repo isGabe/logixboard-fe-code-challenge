@@ -100,46 +100,39 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ data }) => {
       return aDate.getTime() - bDate.getTime();
     });
 
+  // Get shipments for the week of `startDate`
+  const shipments =
+    sortedData &&
+    sortedData.reduce((accumulator, shipment: Shipment) => {
+      const date = new Date(shipment.estimatedArrival);
+
+      const weekDifference = differenceInWeeks(date, startDate);
+      if (weekDifference === 0) {
+        accumulator.push(shipment);
+      }
+
+      return accumulator;
+    }, [] as Shipment[]);
+
+  // Get an array of days for the week of `startDate`
+  const weekDays = eachDayOfInterval({
+    start: startDate,
+    end: add(startDate, { days: 6 }),
+  });
+
   // Group shipments by day
-  const thisWeeksShipmentsByDay = () => {
-    // Get an array of days for the next `weeks` weeks
-    const weekDays = eachDayOfInterval({
-      start: startDate,
-      end: add(startDate, { days: 6 }),
-    });
+  const shipmentsByDay = weekDays.map((day: Date) => {
+    const dayShipments =
+      shipments &&
+      shipments.filter((shipment: Shipment) => {
+        return new Date(shipment.estimatedArrival).getTime() === day.getTime();
+      });
 
-    // Get shipments for the next `weeks` weeks
-    const shipments =
-      sortedData &&
-      sortedData.reduce((accumulator, shipment: Shipment) => {
-        const date = new Date(shipment.estimatedArrival);
-
-        const weekDifference = differenceInWeeks(date, startDate);
-        if (weekDifference === 0) {
-          accumulator.push(shipment);
-        }
-
-        return accumulator;
-      }, [] as Shipment[]);
-
-    // Group shipments by day
-    const shipmentsByDay = weekDays.map((day: Date) => {
-      const dayShipments =
-        shipments &&
-        shipments.filter((shipment: Shipment) => {
-          return (
-            new Date(shipment.estimatedArrival).getTime() === day.getTime()
-          );
-        });
-
-      return {
-        day: format(day, 'EEEE MMMM d, yyyy'),
-        shipments: dayShipments,
-      };
-    });
-
-    return shipmentsByDay;
-  };
+    return {
+      day: format(day, 'EEEE MMMM d, yyyy'),
+      shipments: dayShipments,
+    };
+  });
 
   let component: ReactElement;
   switch (data.status) {
@@ -166,8 +159,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ data }) => {
             Show next week's shipments
           </Button>
 
-          {thisWeeksShipmentsByDay &&
-            thisWeeksShipmentsByDay().map(
+          {shipmentsByDay &&
+            shipmentsByDay.map(
               (day: { day: string; shipments: false | Shipment[] }) => {
                 return (
                   <Box key={day.day} className={classes.weekday}>
